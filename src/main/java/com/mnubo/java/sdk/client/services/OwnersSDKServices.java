@@ -13,6 +13,7 @@ import com.mnubo.java.sdk.client.spi.OwnersSDK;
 class OwnersSDKServices implements OwnersSDK {
 
     public static final String OWNER_PATH = "/owners";
+    public static final String OWNER_PATH_EXIST = OWNER_PATH + "/exists";
     private final SDKService sdkCommonServices;
 
     OwnersSDKServices(SDKService sdkCommonServices) {
@@ -85,5 +86,32 @@ class OwnersSDKServices implements OwnersSDK {
     @Override
     public List<Result> createUpdate(Owner... owners) {
         return createUpdate(asList(owners));
+    }
+
+    @Override
+    public List<Map<String, Boolean>> ownersExist(List<String> usernames) {
+        validNotNull(usernames, "List of the usernames cannot be null.");
+
+        final String url = sdkCommonServices.getIngestionBaseUri()
+                .path(OWNER_PATH_EXIST)
+                .build().toString();
+
+        List<Map<String,Boolean>> result = new ArrayList<>();
+        return sdkCommonServices.postRequest(url, result.getClass(), usernames);
+    }
+
+    @Override
+    public Boolean ownerExist(String username) {
+        notBlank(username, "username cannot be blank.");
+
+        final String url = sdkCommonServices.getIngestionBaseUri()
+                .path(OWNER_PATH_EXIST)
+                .pathSegment(username)
+                .build().toString();
+
+        Map<String, Boolean> results = new HashMap<>();
+        results = sdkCommonServices.getRequest(url, results.getClass());
+        return results == null || results.size() != 1 || results.get(username) == null ?
+                false : results.get(username);
     }
 }

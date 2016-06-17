@@ -1,6 +1,7 @@
 package com.mnubo.java.sdk.client.services;
 
 import static com.mnubo.java.sdk.client.services.OwnersSDKServices.OWNER_PATH;
+import static com.mnubo.java.sdk.client.services.OwnersSDKServices.OWNER_PATH_EXIST;
 import static java.lang.String.format;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsEqual.equalTo;
@@ -249,6 +250,51 @@ public class OwnersSDKServicesTest extends AbstractServiceTest {
         validateResult(results);
     }
 
+    @Test
+    public void existObjectThenOk() {
+
+        String username = "user";
+
+        final String url = getClient().getSdkService().getIngestionBaseUri().path(OWNER_PATH_EXIST).pathSegment(username)
+                .build().toString();
+
+        assertThat(url, is(equalTo(format("https://%s:443/api/v3/owners/exists/%s",HOST, username))));
+
+        ownerClient.ownerExist(username);
+    }
+
+    @Test
+    public void existObjectDeviceIdNullThenFail() {
+        String usernames = null;
+
+        expectedException.expect(IllegalStateException.class);
+        expectedException.expectMessage("username cannot be blank.");
+        ownerClient.ownerExist(usernames);
+    }
+
+    @Test
+    public void existObjectsThenOk() {
+
+        List<String> username = new ArrayList<String>() {{
+            add("username");
+        }};
+
+        final String url = getClient().getSdkService().getIngestionBaseUri().path(OWNER_PATH_EXIST)
+                .build().toString();
+
+        assertThat(url, is(equalTo(format("https://%s:443/api/v3/owners/exists",HOST))));
+
+        ownerClient.ownersExist(username);
+    }
+
+    @Test
+    public void existObjectsDeviceIdNullThenFail() {
+        List<String> usernames = null;
+
+        expectedException.expect(IllegalStateException.class);
+        expectedException.expectMessage("List of the usernames cannot be null.");
+        ownerClient.ownersExist(usernames);
+    }
 
     private void validateResult(List<Result> results) {
         assertThat(results.size(), equalTo(4));

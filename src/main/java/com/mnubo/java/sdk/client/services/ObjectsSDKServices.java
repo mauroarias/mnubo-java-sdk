@@ -12,6 +12,7 @@ import com.mnubo.java.sdk.client.models.result.Result;
 import com.mnubo.java.sdk.client.spi.ObjectsSDK;
 
 class ObjectsSDKServices implements ObjectsSDK {
+    public static final String OBJECT_PATH_EXITS = OBJECT_PATH + "/exists";
 
     private final SDKService sdkCommonServices;
 
@@ -74,4 +75,30 @@ class ObjectsSDKServices implements ObjectsSDK {
         return createUpdate(asList(objects));
     }
 
+    @Override
+    public List<Map<String, Boolean>> objectsExist(List<String> deviceIds) {
+        validNotNull(deviceIds, "List of the deviceIds cannot be null.");
+
+        final String url = sdkCommonServices.getIngestionBaseUri()
+                .path(OBJECT_PATH_EXITS)
+                .build().toString();
+
+        List<Map<String,Boolean>> result = new ArrayList<>();
+        return sdkCommonServices.postRequest(url, result.getClass(), deviceIds);
+    }
+
+    @Override
+    public Boolean objectExist(String deviceId) {
+        notBlank(deviceId, "deviceId cannot be blank.");
+
+        final String url = sdkCommonServices.getIngestionBaseUri()
+                .path(OBJECT_PATH_EXITS)
+                .pathSegment(deviceId)
+                .build().toString();
+
+        Map<String, Boolean> results = new HashMap<>();
+        results = sdkCommonServices.getRequest(url, results.getClass());
+        return results == null || results.size() != 1 || results.get(deviceId) == null ?
+                false : results.get(deviceId);
+    }
 }
