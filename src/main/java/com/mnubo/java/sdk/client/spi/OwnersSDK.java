@@ -1,6 +1,8 @@
 package com.mnubo.java.sdk.client.spi;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import com.mnubo.java.sdk.client.models.Owner;
 import com.mnubo.java.sdk.client.models.result.Result;
@@ -58,4 +60,18 @@ public interface OwnersSDK {
      * @return
      */
     List<Result> createUpdate(Owner... owners);
+
+    /**
+     * It checks if certain owners exist
+     * @param usernames The list of usernames to check if exists. ["userA", "userb"]
+     * @return The list of usernames with an existing boolean, true if it exists, false if it does not exist. [{"userA" : false},{"userb":true}]
+     */
+    List<Map<String, Boolean>> ownersExist(Set<String> usernames);
+
+    /**
+     * It checks if a specify owner exists
+     * @param username The username to check if exists. "userA"
+     * @return Existing boolean value. false
+     */
+    Boolean isOwnerExist(String username);
 }

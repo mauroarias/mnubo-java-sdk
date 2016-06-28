@@ -1,6 +1,7 @@
 package com.mnubo.java.sdk.client.services;
 
 import static com.mnubo.java.sdk.client.Constants.OBJECT_PATH;
+import static com.mnubo.java.sdk.client.services.ObjectsSDKServices.OBJECT_PATH_EXITS;
 import static java.lang.String.format;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsEqual.equalTo;
@@ -10,8 +11,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -207,6 +207,50 @@ public class ObjectsSDKServicesTest extends AbstractServiceTest {
         List<Result> results = objectClient.createUpdate(smartObject);
 
         validateResult(results);
+    }
+
+    @Test
+    public void existObjectThenOk() {
+
+        String deviceId = "deviceId";
+
+        final String url = getClient().getSdkService().getIngestionBaseUri().path(OBJECT_PATH_EXITS).pathSegment(deviceId)
+                .build().toString();
+
+        assertThat(url, is(equalTo(format("https://%s:443/api/v3/objects/exists/%s",HOST, deviceId))));
+
+        objectClient.isObjectExist(deviceId);
+    }
+
+    @Test
+    public void existObjectDeviceIdNullThenFail() {
+        String deviceId = null;
+
+        expectedException.expect(IllegalStateException.class);
+        expectedException.expectMessage("deviceId cannot be blank.");
+        objectClient.isObjectExist(deviceId);
+    }
+
+    @Test
+    public void existObjectsThenOk() {
+
+        Set<String> deviceId = new HashSet<>(Arrays.asList("deviceId"));
+
+        final String url = getClient().getSdkService().getIngestionBaseUri().path(OBJECT_PATH_EXITS)
+                .build().toString();
+
+        assertThat(url, is(equalTo(format("https://%s:443/api/v3/objects/exists",HOST))));
+
+        objectClient.objectsExist(deviceId);
+    }
+
+    @Test
+    public void existObjectsDeviceIdNullThenFail() {
+        Set<String> deviceId = null;
+
+        expectedException.expect(IllegalStateException.class);
+        expectedException.expectMessage("List of the deviceIds cannot be null.");
+        objectClient.objectsExist(deviceId);
     }
 
     private void validateResult(List<Result> results) {

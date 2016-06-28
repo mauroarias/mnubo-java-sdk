@@ -2,6 +2,7 @@ package com.mnubo.java.sdk.client.services;
 
 import static com.mnubo.java.sdk.client.Constants.OBJECT_PATH;
 import static com.mnubo.java.sdk.client.services.EventsSDKServices.EVENT_PATH;
+import static com.mnubo.java.sdk.client.services.EventsSDKServices.EVENT_PATH_EXITS;
 import static com.mnubo.java.sdk.client.services.EventsSDKServices.EVENT_PATH_SEGMENT;
 import static java.lang.String.format;
 import static org.hamcrest.core.Is.is;
@@ -11,8 +12,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -23,11 +23,11 @@ import com.mnubo.java.sdk.client.models.result.Result.ResultStates;
 import com.mnubo.java.sdk.client.spi.EventsSDK;
 
 public class EventsSDKServicesTest extends AbstractServiceTest {
-    private EventsSDK objectClient;
+    private EventsSDK eventClient;
 
     @Before
     public void eventSetup() {
-        objectClient = getClient().getEventClient();
+        eventClient = getClient().getEventClient();
 
         Result[] resultsMockSetup = {
                 new Result("idEventTest1", ResultStates.success, "", false),
@@ -52,7 +52,7 @@ public class EventsSDKServicesTest extends AbstractServiceTest {
 
         assertThat(url, is(equalTo(format("https://%s:443/api/v3/events",HOST))));
 
-        List<Result> results = objectClient.send(events);
+        List<Result> results = eventClient.send(events);
 
         validateResult(results);
     }
@@ -61,7 +61,7 @@ public class EventsSDKServicesTest extends AbstractServiceTest {
     public void postVarargEventThenOk() {
         Event event = Event.builder().withEventType("test_type").build();
 
-        List<Result> results = objectClient.send(event);
+        List<Result> results = eventClient.send(event);
 
         validateResult(results);
     }
@@ -71,7 +71,7 @@ public class EventsSDKServicesTest extends AbstractServiceTest {
 
         expectedException.expect(IllegalStateException.class);
         expectedException.expectMessage("Event list cannot be null or empty.");
-        objectClient.send(new ArrayList<Event>());
+        eventClient.send(new ArrayList<Event>());
     }
 
     @Test
@@ -88,7 +88,7 @@ public class EventsSDKServicesTest extends AbstractServiceTest {
 
         assertThat(url, is(equalTo(format("https://%s:443/api/v3/objects/%s/events",HOST, deviceId))));
 
-        List<Result> results = objectClient.send(deviceId, events);
+        List<Result> results = eventClient.send(deviceId, events);
 
         validateResult(results);
     }
@@ -100,7 +100,7 @@ public class EventsSDKServicesTest extends AbstractServiceTest {
 
         expectedException.expect(IllegalStateException.class);
         expectedException.expectMessage("Event list cannot be null or empty.");
-        objectClient.send(deviceId, null);
+        eventClient.send(deviceId, null);
     }
 
     @Test
@@ -110,7 +110,7 @@ public class EventsSDKServicesTest extends AbstractServiceTest {
 
         expectedException.expect(IllegalStateException.class);
         expectedException.expectMessage("Event list cannot be null or empty.");
-        objectClient.send(deviceId, new ArrayList<Event>());
+        eventClient.send(deviceId, new ArrayList<Event>());
     }
 
     @Test
@@ -123,7 +123,7 @@ public class EventsSDKServicesTest extends AbstractServiceTest {
 
         expectedException.expect(IllegalStateException.class);
         expectedException.expectMessage("device_Id cannot be blank.");
-        objectClient.send(deviceId, events);
+        eventClient.send(deviceId, events);
     }
 
     @Test
@@ -136,7 +136,7 @@ public class EventsSDKServicesTest extends AbstractServiceTest {
 
         expectedException.expect(IllegalStateException.class);
         expectedException.expectMessage("device_Id cannot be blank.");
-        objectClient.send(deviceId, events);
+        eventClient.send(deviceId, events);
     }
 
     private void validateResult(List<Result> results) {
@@ -156,5 +156,53 @@ public class EventsSDKServicesTest extends AbstractServiceTest {
         assertThat(results.get(1).getMessage(), equalTo("Object for the Event doesn't exist"));
         assertThat(results.get(2).getMessage(), equalTo("Other error for test"));
         assertThat(results.get(3).getMessage(), equalTo(""));
+    }
+
+    @Test
+    public void existEventThenOk() {
+
+        String eventId = "eventId";
+
+        final String url = getClient()
+                .getSdkService()
+                .getIngestionBaseUri()
+                .path(EVENT_PATH_EXITS)
+                .pathSegment(eventId)
+                .build().toString();
+
+        assertThat(url, is(equalTo(format("https://%s:443/api/v3/events/exists/%s",HOST, eventId))));
+
+        eventClient.isEventExist(eventId);
+    }
+
+    @Test
+    public void existObjectDeviceIdNullThenFail() {
+        String eventId = null;
+
+        expectedException.expect(IllegalStateException.class);
+        expectedException.expectMessage("eventId cannot be blank.");
+        eventClient.isEventExist(eventId);
+    }
+
+    @Test
+    public void existObjectsThenOk() {
+
+        Set<String> eventId = new HashSet<>(Arrays.asList("eventId"));
+
+        final String url = getClient().getSdkService().getIngestionBaseUri().path(EVENT_PATH_EXITS)
+                .build().toString();
+
+        assertThat(url, is(equalTo(format("https://%s:443/api/v3/events/exists",HOST))));
+
+        eventClient.eventsExist(eventId);
+    }
+
+    @Test
+    public void existObjectsDeviceIdNullThenFail() {
+        Set<String> eventId = null;
+
+        expectedException.expect(IllegalStateException.class);
+        expectedException.expectMessage("List of the eventIds cannot be null.");
+        eventClient.eventsExist(eventId);
     }
 }

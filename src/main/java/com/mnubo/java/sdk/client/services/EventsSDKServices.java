@@ -3,11 +3,11 @@ package com.mnubo.java.sdk.client.services;
 import static com.mnubo.java.sdk.client.Constants.OBJECT_PATH;
 import static com.mnubo.java.sdk.client.utils.ValidationUtils.notBlank;
 import static com.mnubo.java.sdk.client.utils.ValidationUtils.notNullNorEmpty;
+import static com.mnubo.java.sdk.client.utils.ValidationUtils.validNotNull;
 import static java.util.Arrays.*;
 
 import java.util.*;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.mnubo.java.sdk.client.models.Event;
 import com.mnubo.java.sdk.client.models.result.Result;
 import com.mnubo.java.sdk.client.spi.EventsSDK;
@@ -16,6 +16,7 @@ class EventsSDKServices implements EventsSDK {
 
     public static final String EVENT_PATH = "/events";
     public static final String EVENT_PATH_SEGMENT = "events";
+    public static final String EVENT_PATH_EXITS = EVENT_PATH + "/exists";
     private static final String REPORT_RESULTS_QUERY_PARAM = "report_results";
     private final SDKService sdkCommonServices;
 
@@ -57,6 +58,33 @@ class EventsSDKServices implements EventsSDK {
     public List<Result> send(Event... events) {
 
         return send(asList(events));
+    }
+
+    @Override
+    public List<Map<String, Boolean>> eventsExist(Set<String> eventIds) {
+        validNotNull(eventIds, "List of the eventIds cannot be null.");
+
+        final String url = sdkCommonServices.getIngestionBaseUri()
+                .path(EVENT_PATH_EXITS)
+                .build().toString();
+
+        List<Map<String,Boolean>> result = new ArrayList<>();
+        return sdkCommonServices.postRequest(url, result.getClass(), eventIds);
+    }
+
+    @Override
+    public Boolean isEventExist(String eventId) {
+        notBlank(eventId, "eventId cannot be blank.");
+
+        final String url = sdkCommonServices.getIngestionBaseUri()
+                .path(EVENT_PATH_EXITS)
+                .pathSegment(eventId)
+                .build().toString();
+
+        Map<String, Boolean> results = new HashMap<>();
+        results = sdkCommonServices.getRequest(url, results.getClass());
+        return results == null || results.size() != 1 || results.get("exists") == null ?
+                false : results.get("exists");
     }
 
     private List<Result> postRequest(String url, Object object) {
